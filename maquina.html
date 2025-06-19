@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Computador Hipotético</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            height: calc(100vh - 20px);
+        }
+
+        .main-panel {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 15px;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .controls h2 {
+            margin-bottom: 15px;
+            color: #87CEEB;
+            text-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            border-radius: 8px;
+            padding: 2px;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #2c3e50;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-label:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+        }
+
+        button {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        select {
+            background: #2c3e50;
+            color: white;
+            border: 1px solid #4ECDC4;
+            padding: 8px;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+
+        .execution-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            overflow: hidden;
+        }
+
+        .memory-section, .registers-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title {
+            color: #87CEEB;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(135, 206, 235, 0.5);
+        }
+
+        .memory-grid {
+            flex: 1;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            max-height: 400px;
+        }
+
+        .memory-row {
+            display: grid;
+            grid-template-columns: 80px repeat(8, 1fr);
+            gap: 5px;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+
+        .memory-address {
+            color: #4ECDC4;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .memory-cell {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px;
+            text-align: center;
+            border-radius: 3px;
+            border: 1px solid transparent;
+            min-height: 25px;
+            font-size: 12px;
+        }
+
+        .memory-cell.current-instruction {
+            background: #FF6B6B;
+            border-color: #FF4757;
+            animation: pulse 1s infinite;
+        }
+
+        .memory-cell.stack {
+            background: #FFA726;
+            border-color: #FF9800;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .registers-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .register {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .register-name {
+            color: #4ECDC4;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .register-value {
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .register.changed {
+            background: rgba(255, 107, 107, 0.3);
+            border-color: #FF6B6B;
+            animation: highlight 0.5s ease;
+        }
+
+        @keyframes highlight {
+            0% { background: rgba(255, 107, 107, 0.6); }
+            100% { background: rgba(255, 107, 107, 0.3); }
+        }
+
+        .status-area {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .io-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .io-area {
+            flex: 1;
+        }
+
+        .io-title {
+            color: #4ECDC4;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .io-content {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 100px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            background: #2c3e50;
+            color: white;
+            border: 1px solid #4ECDC4;
+            padding: 8px;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+
+        .current-instruction {
+            background: rgba(255, 107, 107, 0.2);
+            border: 2px solid #FF6B6B;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .instruction-title {
+            color: #FF6B6B;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .instruction-details {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff4444;
+            color: #ffcccc;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .success {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #44ff44;
+            color: #ccffcc;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #4ECDC4 rgba(255, 255, 255, 0.1);
+        }
+
+        .scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #4ECDC4;
+            border-radius: 4px;
+        }
+
+        .scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #3BA99C;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-panel">
+            <!-- Controles -->
+            <div class="controls">
+                <h2>🖥️ Máquina Virtual</h2>
+                
+                <div class="control-group">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="fileInput" accept=".txt">
+                        <label for="fileInput" class="file-input-label">📁 Carregar Programa (.txt)</label>
+                    </div>
+                    
+                    <select id="modeSelect">
+                        <option value="0">Modo 0: Contínuo</option>
+                        <option value="1">Modo 1: Visual</option>
+                        <option value="2" selected>Modo 2: Depuração</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <button onclick="startExecution()">▶️ Iniciar</button>
+                    <button onclick="stepExecution()" id="stepBtn">⏭️ Passo</button>
+                    <button onclick="stopExecution()">⏹️ Parar</button>
+                    <button onclick="resetMachine()">🔄 Reset</button>
+                </div>
+
+                <div id="statusMessage"></div>
+            </div>
+
+            <!-- Área de Execução -->
+            <div class="execution-area">
+                <!-- Memória -->
+                <div class="memory-section">
+                    <div class="section-title">💾 Memória (16 bits por palavra)</div>
+                    <div class="memory-grid scrollbar" id="memoryGrid"></div>
+                </div>
+
+                <!-- Registradores -->
+                <div class="registers-section">
+                    <div class="section-title">📊 Registradores</div>
+                    <div class="registers-grid" id="registersGrid"></div>
+                </div>
+            </div>
+
+            <!-- Status e Instrução Atual -->
+            <div class="status-area">
+                <div id="currentInstruction" class="current-instruction" style="display: none;">
+                    <div class="instruction-title">🎯 Instrução Atual</div>
+                    <div class="instruction-details" id="instructionDetails"></div>
+                </div>
+                
+                <div class="status-grid">
+                    <div>
+                        <strong>Status:</strong> <span id="machineStatus">Parado</span><br>
+                        <strong>Modo:</strong> <span id="currentMode">Depuração</span><br>
+                        <strong>Ciclos:</strong> <span id="cycleCount">0</span>
+                    </div>
+                    <div>
+                        <strong>Pilha (SP):</strong> <span id="stackInfo">0</span><br>
+                        <strong>Overflow:</strong> <span id="overflowStatus">Não</span><br>
+                        <strong>Arquivo:</strong> <span id="fileName">Nenhum</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel de I/O -->
+        <div class="io-section">
+            <div class="io-area">
+                <div class="io-title">📤 Saída</div>
+                <div class="io-content scrollbar" id="outputArea"></div>
+            </div>
+            
+            <div class="io-area">
+                <div class="io-title">📥 Entrada</div>
+                <div class="io-content scrollbar" id="inputQueue"></div>
+                <div class="input-area">
+                    <input type="number" id="inputValue" placeholder="Digite um valor...">
+                    <button onclick="addInput()">➕ Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class VirtualMachine {
+            constructor() {
+                this.memory = new Array(1024).fill(0); // 1KB mínimo
+                this.registers = {
+                    PC: 0,    // Program Counter
+                    SP: 0,    // Stack Pointer
+                    ACC: 0,   // Accumulator
+                    MOP: 2,   // Modo de Operação
+                    RI: 0,    // Registrador de Instrução
+                    RE: 0,    // Registrador de Endereço
+                    R0: 0,    // Registrador Geral 0
+                    R1: 0     // Registrador Geral 1
+                };
+                
+                this.inputQueue = [];
+                this.outputBuffer = [];
+                this.isRunning = false;
+                this.isPaused = false;
+                this.cycleCount = 0;
+                this.currentInstruction = null;
+                this.stackLimit = 10;
+                
+                this.opcodes = {
+                    0: 'BR', 1: 'BRPOS', 2: 'ADD', 3: 'LOAD', 4: 'BRZERO',
+                    5: 'BRNEG', 6: 'SUB', 7: 'STORE', 8: 'WRITE', 10: 'DIVIDE',
+                    11: 'STOP', 12: 'READ', 13: 'COPY', 14: 'MULT', 15: 'CALL',
+                    16: 'RET', 17: 'PUSH', 18: 'POP'
+                };
+                
+                this.initializeUI();
+            }
+
+            initializeUI() {
+                this.updateMemoryDisplay();
+                this.updateRegistersDisplay();
+                this.updateStatus();
+            }
+
+            loadProgram(binaryData) {
+                try {
+                    // Lê de 16 em 16 caracteres (bits) como especificado
+                    let address = 0;
+                    for (let i = 0; i < binaryData.length; i += 16) {
+                        const wordStr = binaryData.substr(i, 16).padEnd(16, '0');
+                        const value = parseInt(wordStr, 2);
+                        if (!isNaN(value) && address < this.memory.length) {
+                            this.memory[address] = value;
+                            address++;
+                        }
+                    }
+                    
+                    this.showMessage(`Programa carregado com sucesso! ${address} palavras carregadas.`, 'success');
+                    this.updateMemoryDisplay();
+                    return true;
+                } catch (error) {
+                    this.showMessage(`Erro ao carregar programa: ${error.message}`, 'error');
+                    return false;
+                }
+            }
+
+            executeInstruction() {
+                if (this.registers.PC >= this.memory.length) {
+                    this.showMessage('Erro: PC fora dos limites da memória', 'error');
+                    this.stop();
+                    return false;
+                }
+
+                const instruction = this.memory[this.registers.PC];
+                this.registers.RI = instruction;
+                
+                // Decodificar instrução
+                const immediateMode = (instruction & 128) !== 0; // Bit 7
+                const indirect1 = (instruction & 32) !== 0;      // Bit 5
+                const indirect2 = (instruction & 64) !== 0;      // Bit 6
+                const baseOpcode = instruction & 31;             // 5 bits inferiores
+                
+                const opcodeStr = this.opcodes[baseOpcode] || 'UNKNOWN';
+                
+                this.currentInstruction = {
+                    address: this.registers.PC,
+                    opcode: baseOpcode,
+                    instruction: instruction,
+                    mnemonic: opcodeStr,
+                    immediate: immediateMode,
+                    indirect1: indirect1,
+                    indirect2: indirect2
+                };
+
+                this.registers.PC++;
+                
+                try {
+                    switch (baseOpcode) {
+                        case 0: // BR
+                            this.executeBR(immediateMode, indirect1);
+                            break;
+                        case 1: // BRPOS
+                            this.executeBRPOS(immediateMode, indirect1);
+                            break;
+                        case 2: // ADD
+                            this.executeADD(immediateMode, indirect1);
+                            break;
+                        case 3: // LOAD
+                            this.executeLOAD(immediateMode, indirect1);
+                            break;
+                        case 4: // BRZERO
+                            this.executeBRZERO(immediateMode, indirect1);
+                            break;
+                        case 5: // BRNEG
+                            this.executeBRNEG(immediateMode, indirect1);
+                            break;
+                        case 6: // SUB
+                            this.executeSUB(immediateMode, indirect1);
+                            break;
+                        case 7: // STORE
+                            this.executeSTORE(immediateMode, indirect1);
+                            break;
+                        case 8: // WRITE
+                            this.executeWRITE(immediateMode, indirect1);
+                            break;
+                        case 10: // DIVIDE
+                            this.executeDIVIDE(immediateMode, indirect1);
+                            break;
+                        case 11: // STOP
+                            this.executeSTOP();
+                            return false;
+                        case 12: // READ
+                            this.executeREAD(immediateMode, indirect1);
+                            break;
+                        case 13: // COPY
+                            this.executeCOPY(immediateMode, indirect1, indirect2);
+                            break;
+                        case 14: // MULT
+                            this.executeMULT(immediateMode, indirect1);
+                            break;
+                        case 15: // CALL
+                            this.executeCALL(immediateMode, indirect1);
+                            break;
+                        case 16: // RET
+                            this.executeRET();
+                            break;
+                        case 17: // PUSH
+                            this.executePUSH();
+                            break;
+                        case 18: // POP
+                            this.executePOP();
+                            break;
+                        default:
+                           this.showMessage(`Instrução desconhecida: ${baseOpcode}`, 'error');
+                            this.stop();
+                            return false;
+                    }
+                } catch (error) {
+                    this.showMessage(`Erro na execução: ${error.message}`, 'error');
+                    this.stop();
+                    return false;
+                }
+
+                this.cycleCount++;
+                return true;
+            }
+
+            getOperand(immediate, indirect) {
+                if (this.registers.PC >= this.memory.length) {
+                    throw new Error('PC fora dos limites para operando');
+                }
+                
+                let operand = this.memory[this.registers.PC];
+                this.registers.PC++;
+                
+                if (immediate) {
+                    return operand;
+                } else if (indirect) {
+                    if (operand >= this.memory.length) {
+                        throw new Error('Endereço indireto fora dos limites');
+                    }
+                    return this.memory[operand];
+                } else {
+                    return operand;
+                }
+            }
+
+            getOperandAddress(immediate, indirect) {
+                if (this.registers.PC >= this.memory.length) {
+                    throw new Error('PC fora dos limites para endereço');
+                }
+                
+                let address = this.memory[this.registers.PC];
+                this.registers.PC++;
+                
+                if (immediate) {
+                    throw new Error('Modo imediato não válido para endereço');
+                } else if (indirect) {
+                    if (address >= this.memory.length) {
+                        throw new Error('Endereço indireto fora dos limites');
+                    }
+                    return this.memory[address];
+                } else {
+                    return address;
+                }
+            }
+
+            // Implementação das instruções
+            executeBR(immediate, indirect) {
+                const address = this.getOperandAddress(immediate, indirect);
+                this.registers.PC = address;
+            }
+
+            executeBRPOS(immediate, indirect) {
+                const address = this.getOperandAddress(immediate, indirect);
+                if (this.registers.ACC > 0) {
+                    this.registers.PC = address;
+                }
+            }
+
+            executeBRZERO(immediate, indirect) {
+                const address = this.getOperandAddress(immediate, indirect);
+                if (this.registers.ACC === 0) {
+                    this.registers.PC = address;
+                }
+            }
+
+            executeBRNEG(immediate, indirect) {
+                const address = this.getOperandAddress(immediate, indirect);
+                if (this.registers.ACC < 0) {
+                    this.registers.PC = address;
+                }
+            }
+
+            executeADD(immediate, indirect) {
+                const value = this.getOperand(immediate, indirect);
+                this.registers.ACC = (this.registers.ACC + value) & 0xFFFF;
+            }
+
+            executeSUB(immediate, indirect) {
+                const value = this.getOperand(immediate, indirect);
+                this.registers.ACC = (this.registers.ACC - value) & 0xFFFF;
+            }
+
+            executeMULT(immediate, indirect) {
+                const value = this.getOperand(immediate, indirect);
+                this.registers.ACC = (this.registers.ACC * value) & 0xFFFF;
+            }
+
+            executeDIVIDE(immediate, indirect) {
+                const value = this.getOperand(immediate, indirect);
+                if (value === 0) {
+                    throw new Error('Divisão por zero');
+                }
+                this.registers.ACC = Math.floor(this.registers.ACC / value) & 0xFFFF;
+            }
+
+            executeLOAD(immediate, indirect) {
+                const value = this.getOperand(immediate, indirect);
+                this.registers.ACC = value;
+            }
+
+            executeSTORE(immediate, indirect) {
+                const address = this.getOperandAddress(immediate, indirect);
+                if (address >= this.memory.length) {
+                    throw new Error('Endereço de armazenamento fora dos limites');
+                }
+                this.memory[address] = this.registers.ACC;
+            }
+
+            executeWRITE(immediate, indirect) {
+                const value = this.getOperand(immediate, indirect);
+                this.outputBuffer.push(value);
+                this.updateOutputDisplay();
+            }
+
+            executeREAD(immediate, indirect) {
+                if (this.inputQueue.length === 0) {
+                    throw new Error('Fila de entrada vazia');
+                }
+                const value = this.inputQueue.shift();
+                const address = this.getOperandAddress(immediate, indirect);
+                if (address >= this.memory.length) {
+                    throw new Error('Endereço de leitura fora dos limites');
+                }
+                this.memory[address] = value;
+                this.updateInputDisplay();
+            }
+
+            executeCOPY(immediate, indirect1, indirect2) {
+                const sourceAddr = this.getOperandAddress(false, indirect1);
+                const destAddr = this.getOperandAddress(immediate, indirect2);
+                
+                if (sourceAddr >= this.memory.length || destAddr >= this.memory.length) {
+                    throw new Error('Endereço de cópia fora dos limites');
+                }
+                
+                this.memory[destAddr] = this.memory[sourceAddr];
+            }
+
+            executeCALL(immediate, indirect) {
+                this.pushStack(this.registers.PC);
+                const address = this.getOperandAddress(immediate, indirect);
+                this.registers.PC = address;
+            }
+
+            executeRET() {
+                this.registers.PC = this.popStack();
+            }
+
+            executePUSH() {
+                this.pushStack(this.registers.ACC);
+            }
+
+            executePOP() {
+                this.registers.ACC = this.popStack();
+            }
+
+            executeSTOP() {
+                this.showMessage('Programa finalizado com STOP', 'success');
+                this.stop();
+            }
+
+            pushStack(value) {
+                if (this.registers.SP >= this.stackLimit) {
+                    this.registers.PC = 0; // Stack Overflow - desvio para endereço 0
+                    throw new Error('Stack Overflow');
+                }
+                this.registers.SP++;
+                this.memory[this.registers.SP + 1] = value; // Base da pilha no endereço 2
+            }
+
+            popStack() {
+                if (this.registers.SP <= 0) {
+                    throw new Error('Stack Underflow');
+                }
+                const value = this.memory[this.registers.SP + 1];
+                this.registers.SP--;
+                return value;
+            }
+
+            step() {
+                if (!this.isRunning) return false;
+                
+                const result = this.executeInstruction();
+                this.updateDisplay();
+                return result;
+            }
+
+            run() {
+                if (!this.isRunning) return;
+                
+                const mode = parseInt(document.getElementById('modeSelect').value);
+                
+                if (mode === 0) {
+                    // Modo contínuo sem interação
+                    while (this.isRunning && this.executeInstruction()) {
+                        this.cycleCount++;
+                    }
+                    this.updateDisplay();
+                } else if (mode === 1) {
+                    // Modo contínuo com interação visual
+                    const executeStep = () => {
+                        if (this.isRunning && !this.isPaused) {
+                            if (this.executeInstruction()) {
+                                this.updateDisplay();
+                                setTimeout(executeStep, 100); // Delay para visualização
+                            }
+                        }
+                    };
+                    executeStep();
+                } else {
+                    // Modo depuração - apenas um passo
+                    this.step();
+                }
+            }
+
+            start() {
+                this.isRunning = true;
+                this.isPaused = false;
+                this.run();
+                this.updateStatus();
+            }
+
+            stop() {
+                this.isRunning = false;
+                this.isPaused = false;
+                this.updateStatus();
+            }
+
+            reset() {
+                this.isRunning = false;
+                this.isPaused = false;
+                this.cycleCount = 0;
+                this.currentInstruction = null;
+                
+                // Reset registradores
+                this.registers.PC = 0;
+                this.registers.SP = 0;
+                this.registers.ACC = 0;
+                this.registers.MOP = parseInt(document.getElementById('modeSelect').value);
+                this.registers.RI = 0;
+                this.registers.RE = 0;
+                this.registers.R0 = 0;
+                this.registers.R1 = 0;
+                
+                // Limpar I/O
+                this.inputQueue = [];
+                this.outputBuffer = [];
+                
+                this.updateDisplay();
+                this.updateStatus();
+                this.showMessage('Máquina resetada', 'success');
+            }
+
+            updateDisplay() {
+                this.updateMemoryDisplay();
+                this.updateRegistersDisplay();
+                this.updateCurrentInstructionDisplay();
+                this.updateStatus();
+            }
+
+            updateMemoryDisplay() {
+                const grid = document.getElementById('memoryGrid');
+                grid.innerHTML = '';
+                
+                for (let i = 0; i < 64; i += 8) { // Mostrar primeiras 64 palavras
+                    const row = document.createElement('div');
+                    row.className = 'memory-row';
+                    
+                    const addrCell = document.createElement('div');
+                    addrCell.className = 'memory-address';
+                    addrCell.textContent = i.toString(16).toUpperCase().padStart(4, '0');
+                    row.appendChild(addrCell);
+                    
+                    for (let j = 0; j < 8; j++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'memory-cell';
+                        const addr = i + j;
+                        const value = this.memory[addr] || 0;
+                        cell.textContent = value.toString(16).toUpperCase().padStart(4, '0');
+                        
+                        // Destacar instrução atual
+                        if (addr === this.registers.PC) {
+                            cell.classList.add('current-instruction');
+                        }
+                        
+                        // Destacar pilha
+                        if (addr > 1 && addr <= this.registers.SP + 1) {
+                            cell.classList.add('stack');
+                        }
+                        
+                        row.appendChild(cell);
+                    }
+                    
+                    grid.appendChild(row);
+                }
+            }
+
+            updateRegistersDisplay() {
+                const grid = document.getElementById('registersGrid');
+                grid.innerHTML = '';
+                
+                const registerInfo = {
+                    'PC': { name: 'Program Counter', value: this.registers.PC },
+                    'SP': { name: 'Stack Pointer', value: this.registers.SP },
+                    'ACC': { name: 'Acumulador', value: this.registers.ACC },
+                    'MOP': { name: 'Modo Operação', value: this.registers.MOP },
+                    'RI': { name: 'Reg. Instrução', value: this.registers.RI },
+                    'RE': { name: 'Reg. Endereço', value: this.registers.RE },
+                    'R0': { name: 'Reg. Geral 0', value: this.registers.R0 },
+                    'R1': { name: 'Reg. Geral 1', value: this.registers.R1 }
+                };
+                
+                Object.entries(registerInfo).forEach(([key, info]) => {
+                    const regDiv = document.createElement('div');
+                    regDiv.className = 'register';
+                    
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'register-name';
+                    nameDiv.textContent = `${key} - ${info.name}`;
+                    
+                    const valueDiv = document.createElement('div');
+                    valueDiv.className = 'register-value';
+                    valueDiv.innerHTML = `
+                        Dec: ${info.value}<br>
+                        Hex: 0x${info.value.toString(16).toUpperCase().padStart(4, '0')}<br>
+                        Bin: ${info.value.toString(2).padStart(16, '0')}
+                    `;
+                    
+                    regDiv.appendChild(nameDiv);
+                    regDiv.appendChild(valueDiv);
+                    grid.appendChild(regDiv);
+                });
+            }
+
+            updateCurrentInstructionDisplay() {
+                const instrDiv = document.getElementById('currentInstruction');
+                const detailsDiv = document.getElementById('instructionDetails');
+                
+                if (this.currentInstruction) {
+                    instrDiv.style.display = 'block';
+                    
+                    let details = `
+                        <strong>Endereço:</strong> 0x${this.currentInstruction.address.toString(16).toUpperCase().padStart(4, '0')}<br>
+                        <strong>Instrução:</strong> ${this.currentInstruction.mnemonic} (${this.currentInstruction.opcode})<br>
+                        <strong>Código:</strong> 0x${this.currentInstruction.instruction.toString(16).toUpperCase().padStart(4, '0')}<br>
+                        <strong>Binário:</strong> ${this.currentInstruction.instruction.toString(2).padStart(16, '0')}<br>
+                    `;
+                    
+                    if (this.currentInstruction.immediate) {
+                        details += '<strong>Modo:</strong> Imediato<br>';
+                    }
+                    if (this.currentInstruction.indirect1) {
+                        details += '<strong>Indireto 1:</strong> Sim<br>';
+                    }
+                    if (this.currentInstruction.indirect2) {
+                        details += '<strong>Indireto 2:</strong> Sim<br>';
+                    }
+                    
+                    detailsDiv.innerHTML = details;
+                } else {
+                    instrDiv.style.display = 'none';
+                }
+            }
+
+            updateStatus() {
+                document.getElementById('machineStatus').textContent = 
+                    this.isRunning ? (this.isPaused ? 'Pausado' : 'Executando') : 'Parado';
+                
+                const mode = parseInt(document.getElementById('modeSelect').value);
+                const modeNames = ['Contínuo', 'Visual', 'Depuração'];
+                document.getElementById('currentMode').textContent = modeNames[mode];
+                
+                document.getElementById('cycleCount').textContent = this.cycleCount;
+                document.getElementById('stackInfo').textContent = `${this.registers.SP}/${this.stackLimit}`;
+
+                document.getElementById('overflowStatus').textContent = 
+                    this.registers.SP >= this.stackLimit ? 'Sim' : 'Não';
+            }
+
+            updateOutputDisplay() {
+                const outputArea = document.getElementById('outputArea');
+                outputArea.innerHTML = this.outputBuffer.map((value, index) => 
+                    `<div>[${index}] ${value} (0x${value.toString(16).toUpperCase()})</div>`
+                ).join('');
+                outputArea.scrollTop = outputArea.scrollHeight;
+            }
+
+            updateInputDisplay() {
+                const inputArea = document.getElementById('inputQueue');
+                inputArea.innerHTML = this.inputQueue.map((value, index) => 
+                    `<div>[${index}] ${value} (0x${value.toString(16).toUpperCase()})</div>`
+                ).join('');
+            }
+
+            addInput(value) {
+                if (value !== undefined && value !== null && !isNaN(value)) {
+                    this.inputQueue.push(parseInt(value));
+                    this.updateInputDisplay();
+                    return true;
+                }
+                return false;
+            }
+
+            showMessage(message, type = 'info') {
+                const statusDiv = document.getElementById('statusMessage');
+                statusDiv.innerHTML = `<div class="${type}">${message}</div>`;
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        // Instância global da máquina virtual
+        let vm = new VirtualMachine();
+
+        // Manipuladores de eventos
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    // Remove quebras de linha e espaços para leitura de 16 em 16 bits
+                    const binaryData = content.replace(/\s+/g, '');
+                    
+                    if (vm.loadProgram(binaryData)) {
+                        document.getElementById('fileName').textContent = file.name;
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function startExecution() {
+            vm.start();
+        }
+
+        function stepExecution() {
+            if (!vm.isRunning) {
+                vm.isRunning = true;
+            }
+            vm.step();
+        }
+
+        function stopExecution() {
+            vm.stop();
+        }
+
+        function resetMachine() {
+            vm.reset();
+            document.getElementById('fileName').textContent = 'Nenhum';
+        }
+
+        function addInput() {
+            const input = document.getElementById('inputValue');
+            const value = parseInt(input.value);
+            
+            if (!isNaN(value) && value >= -32768 && value <= 65535) {
+                vm.addInput(value);
+                input.value = '';
+                vm.showMessage(`Valor ${value} adicionado à entrada`, 'success');
+            } else {
+                vm.showMessage('Valor inválido. Use valores entre -32768 e 65535', 'error');
+            }
+        }
+
+        // Permitir Enter na entrada
+        document.getElementById('inputValue').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addInput();
+            }
+        });
+
+        // Atualizar modo quando selecionado
+        document.getElementById('modeSelect').addEventListener('change', function() {
+            vm.registers.MOP = parseInt(this.value);
+            vm.updateStatus();
+        });
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            vm.showMessage('Simulador carregado. Carregue um arquivo .txt com código binário para começar.', 'success');
+        });
+    </script>
+</body>
+</html>
