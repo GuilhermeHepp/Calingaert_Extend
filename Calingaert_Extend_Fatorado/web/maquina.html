@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Computador Hipotético</title>
+    <link rel="stylesheet" href="css/simulator.css">
+</head>
+<body>
+    <div class="container">
+        <div class="main-panel">
+            <div class="controls">
+                <h2>🖥️ Máquina Virtual</h2>
+                <div class="control-group">
+                    <div class="file-input-wrapper">
+                        <input type="file" id="fileInput" accept=".txt">
+                        <label for="fileInput" class="file-input-label">📁 Carregar Programa (.txt)</label>
+                    </div>
+                    <select id="modeSelect">
+                        <option value="0">Modo 0: Contínuo</option>
+                        <option value="1">Modo 1: Visual</option>
+                        <option value="2" selected>Modo 2: Depuração</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <button onclick="startExecution()">▶️ Iniciar</button>
+                    <button onclick="stepExecution()" id="stepBtn">⏭️ Passo</button>
+                    <button onclick="stopExecution()">⏹️ Parar</button>
+                    <button onclick="resetMachine()">🔄 Reset</button>
+                </div>
+                <div id="statusMessage"></div>
+            </div>
+
+            <div class="execution-area">
+                <div class="memory-section">
+                    <div class="section-title">💾 Memória (16 bits por palavra)</div>
+                    <div class="memory-grid scrollbar" id="memoryGrid"></div>
+                </div>
+                <div class="registers-section">
+                    <div class="section-title">📊 Registradores</div>
+                    <div class="registers-grid" id="registersGrid"></div>
+                </div>
+            </div>
+
+            <div class="status-area">
+                <div id="currentInstruction" class="current-instruction" style="display: none;">
+                    <div class="instruction-title">🎯 Instrução Atual</div>
+                    <div class="instruction-details" id="instructionDetails"></div>
+                </div>
+                <div class="status-grid">
+                    <div>
+                        <strong>Status:</strong> <span id="machineStatus">Parado</span><br>
+                        <strong>Modo:</strong> <span id="currentMode">Depuração</span><br>
+                        <strong>Ciclos:</strong> <span id="cycleCount">0</span>
+                    </div>
+                    <div>
+                        <strong>Pilha (SP):</strong> <span id="stackInfo">0</span><br>
+                        <strong>Overflow:</strong> <span id="overflowStatus">Não</span><br>
+                        <strong>Arquivo:</strong> <span id="fileName">Nenhum</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="io-section">
+            <div class="io-area">
+                <div class="io-title">📤 Saída</div>
+                <div class="io-content scrollbar" id="outputArea"></div>
+            </div>
+            <div class="io-area">
+                <div class="io-title">📥 Entrada</div>
+                <div class="io-content scrollbar" id="inputQueue"></div>
+                <div class="input-area">
+                    <input type="number" id="inputValue" placeholder="Digite um valor...">
+                    <button onclick="addInput()">➕ Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/simulator.js"></script>
+</body>
+</html>

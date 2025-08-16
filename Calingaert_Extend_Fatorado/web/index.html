@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador Calingaert - Compilador</title>
+    <link rel="stylesheet" href="/css/compiler.css">
+</head>
+<body>
+    <h1>Compilador e Carregador</h1>
+
+    <div id="controls">
+        <button id="compileBtn">Compilar Código Assembly</button>
+        <a href="/download" id="downloadBtn">Download programa.txt</a>
+    </div>
+    <p id="status"></p>
+
+    <h2>Código de Máquina Gerado</h2>
+    <textarea id="machine_code_area" placeholder="O código de máquina aparecerá aqui após a compilação..." readonly></textarea>
+
+    <script src="/js/compiler.js"></script>
+</body>
+</html>
