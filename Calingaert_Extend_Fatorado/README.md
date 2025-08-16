@@ -17,7 +17,7 @@ O projeto implementa e simula uma arquitetura inspirada na máquina de Calingaer
 1. **Clonar o repositório**:
    ```bash
    git clone https://github.com/GuilhermeHepp/Calingaert_Extend.git
-   cd Calingaert_Extend
+   cd Calingaert_Extend_Refactor
 ````
 
 2. **Compilar o código Java**:
