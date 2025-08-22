@@ -32,7 +32,7 @@ public class Passagem2 {
                         continue;
 
                     case "CONST":
-                        int valorConst = Util.parseNumero(parsed.operandos.get(0));
+                        int valorConst = Integer.parseInt(parsed.operandos.get(0));
                         String binConst = String.format("%16s", Integer.toBinaryString(valorConst)).replace(' ', '0');
                         lst.add(String.format("%04X %s %s", endereco, binConst, linha));
                         obj.append(binConst);
